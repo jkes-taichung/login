@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教師業務表單系統</title>
+    <style>
+      :root {
+        --primary-color: #1a73e8;
+        --error-color: #d93025;
+        --success-color: #188038;
+        --primary-blue: #1a73e8;
+        --icon-color: #5f6368;
+        --cancel-gray: #dadce0;
+      }
+      body {
+        font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        margin: 0;
+      }
+
+      .login-card {
+        background: white;
+        padding: 40px 40px 25px 40px;
+        border-radius: 15px;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        width: 90%;
+        max-width: 350px;
+        text-align: center;
+      }
+      .school-logo {
+        width: 100px;
+        height: auto;
+        margin-bottom: 15px;
+      }
+      h2 { color: #333; margin: 0 0 10px 0; font-size: 22px; }
+      .subtitle { 
+        color: #555; 
+        font-weight: bold; 
+        font-size: 15px; 
+        margin-bottom: 25px; 
+      }
+      .input-group { 
+        margin-bottom: 15px; 
+        position: relative; 
+      }
+      
+      input {
+        width: 100%;
+        padding: 15px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 20px;
+        box-sizing: border-box;
+        transition: border-color 0.3s;
+        text-align: center;   
+      }
+      
+      #username {
+        padding-left: 50px;   
+        padding-right: 50px;  
+      }
+      input:focus {
+        border-color: var(--primary-color);
+        outline: none;
+      }
+
+      .mask-input {
+        -webkit-text-security: disc !important; 
+      }
+      .mask-input.unmask {
+        -webkit-text-security: none !important;
+      }
+
+      /* 圖形驗證碼組合樣式 */
+      .captcha-container {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .captcha-container input {
+        flex: 1;
+        font-size: 18px;
+        padding: 12px;
+      }
+      .captcha-box {
+        width: 120px;
+        height: 48px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: border-color 0.3s;
+      }
+      .captcha-box:hover {
+        border-color: var(--primary-blue);
+      }
+      #captchaCanvas {
+        width: 100%;
+        height: 100%;
+      }
+
+      /* 按鈕樣式 */
+      .toggle-password {
+        position: absolute;
+        right: 15px;          
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        padding: 0;           
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        color: var(--icon-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 2; 
+        user-select: none;
+      }
+      .toggle-password .eye-open { display: none; }
+      .toggle-password .eye-close { display: block; }
+      .toggle-password.visible .eye-open { display: block; } 
+      .toggle-password.visible .eye-close { display: none; } 
+
+      .btn {
+        width: 100%;
+        padding: 15px;
+        border: none;
+        border-radius: 8px; 
+        font-size: 18px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-sizing: border-box;
+      }
+      .login-btn {
+        background-color: var(--primary-blue);
+        color: white;
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.25); 
+        margin-top: 5px;
+        margin-bottom: 12px;
+      }
+      .login-btn:hover {
+        background-color: #1557b0;
+      }
+      .cancel-btn {
+        background-color: transparent;
+        color: #5f6368;
+        border: 1px solid var(--cancel-gray);
+        margin-bottom: 5px;
+      }
+      .cancel-btn:hover {
+        background-color: #f8f9fa;
+      }
+      .btn:disabled {
+        background-color: #ccc !important;
+        color: #fff !important;
+        border: none !important;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+      
+      #message {
+        margin-top: 15px;    
+        font-size: 15px;
+        min-height: 24px;    
+        line-height: 1.5;
+      }
+      .loading { color: #666; }
+      .error { color: var(--error-color); font-weight: bold; }
+      .success { color: var(--success-color); font-weight: bold; }
+      
+      .manual-btn {
+        display: inline-block;
+        margin-top: 10px;
+        padding: 10px 20px;
+        background-color: var(--success-color);
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="login-card">
+      <img src="https://jkes.tc.edu.tw/var/file/196/1196/img/big-logo.gif" alt="建功國小校徽" class="school-logo">
+      <h2>教師業務表單系統</h2>
+      <p class="subtitle"></p>
+      
+      <div class="input-group">
+        <input type="text" id="username" class="mask-input" placeholder="請輸入學務系統帳號" 
+               autocomplete="off" inputmode="text" autocorrect="off" autocapitalize="none">
+        
+        <button type="button" class="toggle-password" id="toggleBtn">
+          <svg class="eye-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+          <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      </div>
+
+      <div class="captcha-container">
+        <input type="text" id="captchaInput" placeholder="輸入右方驗證碼" autocomplete="off" maxlength="4">
+        <div class="captcha-box" onclick="generateCaptcha()" title="點擊更換驗證碼">
+          <canvas id="captchaCanvas" width="120" height="48"></canvas>
+        </div>
+      </div>
+
+      <button id="loginBtn" class="btn login-btn" onclick="handleLogin()">進入系統</button>
+      <button id="cancelBtn" class="btn cancel-btn" onclick="handleCancel()">取消</button>
+      
+      <div id="message"></div>
+    </div>
+
+    <script>
+      const targetUrl = 'https://sites.google.com/mail.jkes.tc.edu.tw/jkes-teacher-pro-helper/%E6%95%99%E5%B8%ABpro%E5%8A%A9%E6%89%8B';
+      const fbBaseUrl = 'https://user-a354e-default-rtdb.asia-southeast1.firebasedatabase.app/user/';
+      
+      const usernameInput = document.getElementById('username');
+      const captchaInput = document.getElementById('captchaInput');
+      const loginBtn = document.getElementById('loginBtn');
+      const cancelBtn = document.getElementById('cancelBtn');
+      const toggleBtn = document.getElementById('toggleBtn');
+      
+      let correctCaptchaText = '';
+
+      // 網頁載入時自動生成驗證碼
+      window.onload = function() {
+        generateCaptcha();
+      };
+
+      // 監聽 Enter 鍵
+      usernameInput.addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
+      captchaInput.addEventListener('keypress', e => { if (e.key === 'Enter') handleLogin(); });
+
+      // 💡 純前端 Canvas 繪製圖形驗證碼
+      function generateCaptcha() {
+        const canvas = document.getElementById('captchaCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 隨機產生 4 位數
+        correctCaptchaText = Math.floor(1000 + Math.random() * 9000).toString();
+        
+        // 清空畫布背景
+        ctx.fillStyle = '#f8f9fa';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // 畫幾條隨機干擾線
+        for (let i = 0; i < 3; i++) {
+          ctx.strokeStyle = '#ddd';
+          ctx.beginPath();
+          ctx.moveTo(Math.random() * canvas.width, Math.random() * canvas.height);
+          ctx.lineTo(Math.random() * canvas.width, Math.random() * canvas.height);
+          ctx.stroke();
+        }
+        
+        // 繪製文字
+        ctx.font = 'bold 26px Arial';
+        ctx.fillStyle = '#1a73e8';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // 加上一點文字隨機傾斜或位移，防暴力破解
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.letterSpacing = "4px";
+        ctx.fillText(correctCaptchaText, 0, 0);
+        ctx.restore();
+      }
+
+      // 密碼顯示控制
+      function showPassword() {
+        usernameInput.classList.add('unmask');
+        toggleBtn.classList.add('visible');
+      }
+      function hidePassword() {
+        usernameInput.classList.remove('unmask');
+        toggleBtn.classList.remove('visible');
+      }
+
+      toggleBtn.addEventListener('mousedown', showPassword);
+      toggleBtn.addEventListener('mouseup', hidePassword);
+      toggleBtn.addEventListener('mouseleave', hidePassword);
+      toggleBtn.addEventListener('touchstart', (e) => { e.preventDefault(); showPassword(); }, { passive: false });
+      toggleBtn.addEventListener('touchend', (e) => { e.preventDefault(); hidePassword(); }, { passive: false });
+
+      /* 處理登入驗證 */
+      async function handleLogin() {
+        const username = usernameInput.value.trim();
+        const captcha = captchaInput.value.trim();
+
+        if (!username) {
+          showMsg("⚠️ 請輸入帳號！", "error");
+          usernameInput.focus();
+          return;
+        }
+        if (!captcha) {
+          showMsg("⚠️ 請輸入驗證碼！", "error");
+          captchaInput.focus();
+          return;
+        }
+
+        // 1. 先驗證圖形驗證碼
+        if (captcha !== correctCaptchaText) {
+          showMsg("❌ 驗證碼錯誤，請重新輸入！", "error");
+          captchaInput.value = '';
+          captchaInput.focus();
+          generateCaptcha();
+          return;
+        }
+
+        toggleUI(false);
+        showMsg("⏳ 驗證中，請稍候...", "loading");
+
+        // 2. 處理安全字元並直接對 Firebase 發出 Fetch 請求
+        const safeUsername = username.replace(/[\.\$\#\[\]\/]/g, "_");
+        const firebaseUrl = `${fbBaseUrl}${safeUsername}.json`;
+
+        try {
+          const response = await fetch(firebaseUrl);
+          if (!response.ok) throw new Error('Network error');
+          
+          const userData = await response.json();
+
+          // 3. 判斷 Firebase 是否有這筆資料
+          if (userData !== null && userData.帳號) {
+            const realName = userData.姓名 || "老師";
+            showMsg(`✅ 驗證成功！<br>${realName} 老師，即將進入系統...`, "success");
+            executeRedirect(targetUrl);
+          } else {
+            showMsg("❌ 登入失敗：帳號不正確<br>請確認是否為學務系統帳號。", "error");
+            usernameInput.value = '';
+            captchaInput.value = '';
+            usernameInput.focus();
+            toggleUI(true);
+            generateCaptcha();
+          }
+        } catch (error) {
+          console.error(error);
+          showMsg("⚠️ 系統連線錯誤或資料庫拒絕連線，請稍後再試", "error");
+          toggleUI(true);
+          generateCaptcha();
+        }
+      }
+
+      function handleCancel() {
+        usernameInput.value = '';
+        captchaInput.value = '';
+        showMsg('', ''); 
+        usernameInput.focus();
+        generateCaptcha();
+      }
+
+      function executeRedirect(url) {
+        try {
+          if (window.top && window.top.location) {
+            window.top.location.href = url;
+          }
+        } catch (e) {
+          console.log("Top redirect failed...");
+        }
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_top';
+        document.body.appendChild(a);
+        a.click();
+
+        setTimeout(() => {
+          showMsg(
+            '✅ 驗證成功！<br>若視窗未自動跳轉，請點擊下方按鈕：<br>' +
+            '<a href="' + url + '" target="_top" class="manual-btn">點此進入系統 ➔</a>', 
+            "success"
+          );
+        }, 1500);
+      }
+
+      function toggleUI(isEnabled) {
+        usernameInput.disabled = !isEnabled;
+        captchaInput.disabled = !isEnabled;
+        loginBtn.disabled = !isEnabled;
+        cancelBtn.disabled = !isEnabled; 
+        loginBtn.innerText = isEnabled ? "進入系統" : "處理中...";
+      }
+
+      function showMsg(text, type) {
+        const msg = document.getElementById('message');
+        msg.innerHTML = text;
+        msg.className = type;
+      }
+    </script>
+  </body>
+</html>
