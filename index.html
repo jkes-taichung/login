@@ -306,6 +306,7 @@
       toggleBtn.addEventListener('touchend', (e) => { e.preventDefault(); hidePassword(); }, { passive: false });
 
       /* 處理登入驗證 */
+      /* 處理登入驗證 */
       async function handleLogin() {
         const username = usernameInput.value.trim();
         const captcha = captchaInput.value.trim();
@@ -333,28 +334,39 @@
         toggleUI(false);
         showMsg("⏳ 驗證中，請稍候...", "loading");
 
-        // 2. 處理安全字元並直接對 Firebase 發出 Fetch 請求
-        const safeUsername = username.replace(/[\.\$\#\[\]\/]/g, "_");
-        const firebaseUrl = `${fbBaseUrl}${safeUsername}.json`;
+        // 2. 因為改為流水號，我們必須抓取全部 user 資料來比對
+        const firebaseUrl = `${fbBaseUrl}.json`; // 抓取 .../user.json
 
         try {
           const response = await fetch(firebaseUrl);
           if (!response.ok) throw new Error('Network error');
           
-          const userData = await response.json();
+          const allUsers = await response.json();
 
-          // 3. 判斷 Firebase 是否有這筆資料
-          if (userData !== null && userData.帳號) {
-            const realName = userData.姓名 || "老師";
-            showMsg(`✅ 驗證成功！<br>${realName} 老師，即將進入系統...`, "success");
-            executeRedirect(targetUrl);
+          // 3. 判斷資料庫是否有資料
+          if (allUsers !== null) {
+            let foundUser = null;
+
+            // 遍歷所有流水號節點，尋找帳號相符的資料
+            for (const key in allUsers) {
+              if (allUsers[key] && allUsers[key].帳號 === username) {
+                foundUser = allUsers[key];
+                break; // 找到就跳出迴圈
+              }
+            }
+
+            // 4. 判斷是否成功比對到帳號
+            if (foundUser) {
+              const realName = foundUser.姓名 || "老師";
+              showMsg(`✅ 驗證成功！<br>${realName} 老師，即將進入系統...`, "success");
+              executeRedirect(targetUrl);
+            } else {
+              showMsg("❌ 登入失敗：帳號不正確<br>請確認是否為學務系統帳號。", "error");
+              clearAndResetLogin();
+            }
           } else {
-            showMsg("❌ 登入失敗：帳號不正確<br>請確認是否為學務系統帳號。", "error");
-            usernameInput.value = '';
-            captchaInput.value = '';
-            usernameInput.focus();
-            toggleUI(true);
-            generateCaptcha();
+            showMsg("❌ 資料庫中沒有任何使用者資料。", "error");
+            clearAndResetLogin();
           }
         } catch (error) {
           console.error(error);
@@ -364,6 +376,14 @@
         }
       }
 
+      // 輔助函式：登入失敗時重設輸入框與 UI
+      function clearAndResetLogin() {
+        usernameInput.value = '';
+        captchaInput.value = '';
+        usernameInput.focus();
+        toggleUI(true);
+        generateCaptcha();
+      }
       function handleCancel() {
         usernameInput.value = '';
         captchaInput.value = '';
